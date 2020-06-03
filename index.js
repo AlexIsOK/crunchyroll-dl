@@ -14,6 +14,7 @@ const ffmpeg = require('fluent-ffmpeg')
 const m3u8Parser = require('m3u8-parser')
 const mkdirp = require('mkdirp')
 const rimraf = require('rimraf')
+const child_process = require("child_process")
 
 const { oneLineTrim } = require('common-tags')
 
@@ -119,6 +120,14 @@ let sessionId = null
 let expires = new Date()
 let authed = false
 let premium = false
+
+exec("pip3 --version", (err, stdout, stdin) => {
+  if(err) {
+    console.error("pip3 is needed for cloudscraping.  This is temporary until there is a new cloudscraper for npm.")
+    console.log("You can install Python for Windows through https://www.microsoft.com/en-us/p/python-38/9mssztt1n39l and Linux using your package manager (usually python3-pip)")
+    process.exit(22)
+  }
+})
 
 const { input, username, password, quality, unblocked, debug, list, tmpDir, vilos, subsOnly } = argv
 let { subType, noCleanup } = argv
@@ -544,43 +553,47 @@ const main = async () => {
 
   if (series) {
     info('Attempting to fetch series...')
-
-    const cloudflareBypass = (uri) => {
-      return new Promise((resolve, reject) => {
-        cloudscraper.get({ uri }, (err, res) => {
-          if (!err) {
-            resolve(res)
-          } else {
-            reject(err)
-          }
-        })
-      })
-    }
+    
+    // const cloudflareBypass = (uri) => {
+    //   return new Promise((resolve, reject) => {
+    //     cloudscraper.get({ uri }, (err, res) => {
+    //       if (!err) {
+    //         resolve(res)
+    //       } else {
+    //         reject(err)
+    //       }
+    //     })
+    //   })
+    // }
+    
+    
     
     // grab the page
     let page = null
-    try {
-      if (debug) {
-        logDebug(`Attempting to fetch ${input}`)
-      }
 
+    if (debug) {
+      logDebug(`Attempting to fetch ${input}`)
+    }
+    
+    await child_process.exec("python crunchyscrape.py " + argv['input'], async (err, stdout, stderr) => {
+      if(err) {
+        error(`Error fetching series: Something went wrong`)
+        console.error(stderr)
+        await cleanup()
+      }
+    })
+    
+    try {
+      
       let url = input
       // remove any trailing / if there are any
       if (url[url.length - 1] === '/') url = url.substring(0, url.length - 1)
       // skip any maturity walls if there are any...
       url += '?skip_wall=1'
 
-      let response = await cloudflareBypass(url)
-      if (response.statusCode !== 200) {
-        throw new Error(`Error: Status code ${response.statusCode}`)
-      } else {
-        page = response.body
-      }
+      
     } catch (e) {
       error(`Error fetching series: ${e.message || 'Something went wrong'}`)
-      if (e.errorType === 1) {
-        error('Cannot solve CAPTCHA automatically! Please try again later.')
-      }
       await cleanup()
     }
     const idDivRegex = /<div class="show-actions" group_id="(.*)"><\/div>/ // search for a div with an id
