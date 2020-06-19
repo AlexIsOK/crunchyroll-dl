@@ -121,7 +121,7 @@ let expires = new Date()
 let authed = false
 let premium = false
 
-exec("pip3 --version", (err, stdout, stdin) => {
+child_process.exec("pip3 --version", (err, stdout, stdin) => {
   if(err) {
     console.error("pip3 is needed for cloudscraping.  This is temporary until there is a new cloudscraper for npm.")
     console.log("You can install Python for Windows through https://www.microsoft.com/en-us/p/python-38/9mssztt1n39l and Linux using your package manager (usually python3-pip)")
