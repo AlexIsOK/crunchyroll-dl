@@ -4,7 +4,13 @@
 import sys
 import cloudscraper
 
-scraper = cloudscraper.create_scraper()
+scraper = cloudscraper.create_scraper(allow_brotli=False)
 
-print(scraper.get(sys.argv[1:]).text)
+#Don't ask questions
+page = sys.argv[1:][0]
+
+print("Getting page...")
+print(page)
+
+print(scraper.get(page).text)
 
