@@ -9,8 +9,8 @@ scraper = cloudscraper.create_scraper(allow_brotli=False)
 #Don't ask questions
 page = sys.argv[1:][0]
 
-print("Getting page...")
-print(page)
+#print("Getting page...")
+#print(page)
 
 print(scraper.get(page).text)
 

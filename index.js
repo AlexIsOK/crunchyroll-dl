@@ -140,7 +140,7 @@ const language = argv.language
 const ffmpegArgs = argv['ffmpeg']
 const overwrite = argv['overwrite']
 let desiredLanguages = language.split(',').map(l => l.trim())
-
+let page
 if (language !== 'all' && language !== 'none') {
   for (let language of desiredLanguages) {
     if (!languages.includes(language)) {
@@ -553,7 +553,7 @@ const main = async () => {
 
   if (series) {
     info('Attempting to fetch series...')
-    
+
     // const cloudflareBypass = (uri) => {
     //   return new Promise((resolve, reject) => {
     //     cloudscraper.get({ uri }, (err, res) => {
@@ -565,23 +565,25 @@ const main = async () => {
     //     })
     //   })
     // }
-    
-    
-    
+
+
     // grab the page
-    let page = null
 
     if (debug) {
       logDebug(`Attempting to fetch ${input}`)
     }
     
-    await child_process.exec("python crunchyscrape.py " + argv['input'], async (err, stdout, stderr) => {
-      if(err) {
-        error(`Error fetching series: Something went wrong`)
-        console.error(stderr)
-        await cleanup()
-      }
+    //this is a really bad way of doing things...
+    await child_process.exec("python3 crunchyscrape.py " + argv['input'], async (err, stdout, stderr) => {
+      const fs = require('fs')
+      await fs.writeFileSync("TEMP.txt", stdout)
     })
+    
+    page = fs.readFileSync("TEMP.txt").toString();
+    
+    // await console.log(child);
+    //await console.log(page);
+    // await console.log(child.stdout);
     
     try {
       
